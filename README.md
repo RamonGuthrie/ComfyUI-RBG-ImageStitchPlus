@@ -22,6 +22,7 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
 -   **Clarity Adjustment:** Enhance or soften the midtone contrast of the final image for a punchier or more dreamlike look.
 
 ---
+![Screenshot](https://github.com/user-attachments/assets/9bc5e84f-4d33-46d5-b5c1-0fc21ef7699d)
 
 ## Installation 🛠️
 
