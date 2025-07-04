@@ -5,7 +5,7 @@
 This project provides a powerful and flexible image stitching node for ComfyUI, designed to seamlessly combine multiple images into a single canvas. Whether you're creating panoramas, grids, or complex layouts, the RBG Image Stitch Plus node offers the tools you need to get the job done.
 
 ---
-
+![Screenshot](https://github.com/user-attachments/assets/9bc5e84f-4d33-46d5-b5c1-0fc21ef7699d)
 ## Features 🚀
 
 -   **Multiple Stitching Directions:** Stitch images horizontally, vertically, in compound sequences (e.g., H then V), or in a 2x2 grid.
@@ -22,7 +22,6 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
 -   **Clarity Adjustment:** Enhance or soften the midtone contrast of the final image for a punchier or more dreamlike look.
 
 ---
-![Screenshot](https://github.com/user-attachments/assets/9bc5e84f-4d33-46d5-b5c1-0fc21ef7699d)
 
 ## Installation 🛠️
 
