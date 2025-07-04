@@ -27,7 +27,7 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
 
 1.  Clone this repository into your `ComfyUI/custom_nodes` directory:
     ```bash
-    git clone https://github.com/your-username/ComfyUI-RBG-ImageStitchPlus.git
+    git clone https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus.git
     ```
 2.  Install the required dependencies by running the following command in your terminal:
     ```bash
