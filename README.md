@@ -24,7 +24,7 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
     -   **Supersampling:** Apply high-quality anti-aliasing by rendering the image at a higher resolution (`supersample_factor`) and then downscaling it.
     -   **Interpolation Control:** Select specific resampling filters (e.g., `lanczos`, `bicubic`, `area`) for both resizing and the final downsample, giving you full control over the final texture and sharpness.
 -   **Clarity Adjustment:** Enhance or soften the midtone contrast of the final image. This powerful feature can make an image "pop" with punchy detail or give it a soft, dreamlike feel by adjusting the `clarity_strength`.
-
+---
 ## Experience the Power – Watch the Feature Showcase 📺 
 https://github.com/user-attachments/assets/52eec166-9c79-4583-9c89-d83c2dcbe986
 
