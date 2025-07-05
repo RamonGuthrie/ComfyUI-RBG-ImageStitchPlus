@@ -8,19 +8,22 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
 ![Screenshot](https://github.com/user-attachments/assets/9bc5e84f-4d33-46d5-b5c1-0fc21ef7699d)
 ## Features 🚀
 
--   **Multiple Stitching Directions:** Stitch images horizontally, vertically, in compound sequences (e.g., H then V), or in a 2x2 grid.
--   **Proportion Control:** Choose how to handle images of different sizes:
-    -   `resize`: Resizes images to match.
-    -   `pad`: Adds padding to smaller images to match the largest.
-    -   `pad_edge`: Pads with the average color of the image's edge.
-    -   `crop`: Crops images to a uniform size before stitching.
--   **Customizable Spacing:** Add spacing between stitched images with a custom width and color.
--   **Background Fill:** Fill transparent areas of the final image with a solid color.
--   **Final Resizing & Anti-Aliasing:**
-    -   Resize the final stitched image based on its longer or shorter side.
-    -   Apply supersampling for high-quality anti-aliasing.
--   **Clarity Adjustment:** Enhance or soften the midtone contrast of the final image for a punchier or more dreamlike look.
-
+-   **Advanced Stitching Directions:** Combine up to three images with multiple layout options:
+    -   **Simple:** `right`, `down`, `left`, `up`.
+    -   **Compound:** `H_then_V_down`, `H_then_V_up`, `V_then_H_right`, `V_then_H_left`.
+    -   **Grid:** `Grid_2x2` for a four-quadrant layout.
+-   **Intelligent Proportion Control:** Choose how to handle images of different sizes:
+    -   `resize`: Resizes images to match the dimensions required by the layout.
+    -   `pad`: Adds padding to smaller images to match the largest image in the relevant dimension.
+    -   `pad_edge`: A unique padding mode that analyses the border pixels of an image and uses their average colour for a seamless extension.
+    -   `crop`: Crops images to a uniform size. You can control the crop's origin with `crop_position` (`centre`, `top`, `left`, etc.) for precise framing.
+-   **Customizable Spacing:** Add a visual separator between stitched images with a custom width and colour.
+-   **Background Fill:** Fill transparent areas of the final canvas with a solid colour, perfect for ensuring consistency in your final output.
+-   **Advanced Resizing & Anti-Aliasing:**
+    -   **Final Resize:** Scale the entire stitched canvas based on its `longer_side` or `shorter_side` to fit specific dimensions.
+    -   **Supersampling:** Apply high-quality anti-aliasing by rendering the image at a higher resolution (`supersample_factor`) and then downscaling it.
+    -   **Interpolation Control:** Select specific resampling filters (e.g., `lanczos`, `bicubic`, `area`) for both resizing and the final downsample, giving you full control over the final texture and sharpness.
+-   **Clarity Adjustment:** Enhance or soften the midtone contrast of the final image. This powerful feature can make an image "pop" with punchy detail or give it a soft, dreamlike feel by adjusting the `clarity_strength`.
 
 ## Experience the Power – Watch the Feature Showcase 📺 
 https://github.com/user-attachments/assets/52eec166-9c79-4583-9c89-d83c2dcbe986
