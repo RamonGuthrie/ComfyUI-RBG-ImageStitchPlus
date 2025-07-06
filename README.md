@@ -1,5 +1,5 @@
 # ComfyUI-RBG-ImageStitchPlus 🧩
-<img src="https://img.shields.io/badge/ComfyUI-Compatible-blue?style=for-the-badge" alt="ComfyUI Compatible"><img src="https://img.shields.io/badge/Nodes-32-green?style=for-the-badge" alt="1 Nodes"><img src="https://img.shields.io/badge/Categories-6-orange?style=for-the-badge" alt="1 Categories">
+<img src="https://img.shields.io/badge/ComfyUI-Compatible-blue?style=for-the-badge" alt="ComfyUI Compatible"><img src="https://img.shields.io/badge/Nodes-1-green?style=for-the-badge" alt="1 Nodes"><img src="https://img.shields.io/badge/Categories-1-orange?style=for-the-badge" alt="1 Categories">
 
 ## An Advanced Image Stitching Node for ComfyUI ✨
 
