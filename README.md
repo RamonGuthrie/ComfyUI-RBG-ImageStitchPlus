@@ -26,8 +26,27 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
     -   **Interpolation Control:** Select specific resampling filters (e.g., `lanczos`, `bicubic`, `area`) for both resizing and the final downsample, giving you full control over the final texture and sharpness.
 -   **Clarity Adjustment:** Enhance or soften the midtone contrast of the final image. This powerful feature can make an image "pop" with punchy detail or give it a soft, dreamlike feel by adjusting the `clarity_strength`.
 ---
-## Experience the Power – Watch the Feature Showcase 📺 
+## Experience the Power – Watch the ImageStitchPlus Feature Showcase 📺  
 https://github.com/user-attachments/assets/52eec166-9c79-4583-9c89-d83c2dcbe986
+
+---
+
+## Update: 10/07/2025 - RBG Pad Pro Node 🛠️
+
+The `RBGPadPro` node is a powerful and versatile tool designed for advanced image padding and resizing operations. It goes far beyond simple padding by offering intelligent features like aspect ratio correction, edge-aware color filling, and feathered blending, making it an essential utility for image composition, outpainting preparation, and layout adjustments.
+
+The node takes a primary image and an optional mask, applies a series of transformations based on user-defined parameters, and outputs the modified image and its corresponding mask, ensuring they remain perfectly aligned.
+
+## Feature List 🚀
+
+- **Multi-Mode Operation:** The node can operate in three main modes:
+  - `pad`: Adds padding around the image using a solid color.
+  - `pad_edge`: A smart padding mode that samples the image's border to create a seamless, context-aware fill color. This is excellent for extending backgrounds.
+- **Automatic Aspect Ratio Padding:** Automatically calculates and adds the necessary padding to conform the image to a standard aspect ratio (e.g., 16:9, 4:3, 1:1), which is incredibly useful for standardizing outputs.
+- **Feathered Edges:** Includes a `pad_feathering` option to create a soft, blended transition between the original image and the padded area, avoiding hard lines.
+- **Flexible Image Placement:** Provides granular control over the original image's position (center, top, left, etc.) and fine-tuning offsets on the final canvas.
+- **Alpha Channel Handling:** Can correctly process RGBA images, either by filling the transparent background with a solid color or preserving it.
+- **Final Resizing:** Allows you to specify a final target resolution, resizing the entire canvas after all padding and cropping operations are complete.
 
 ---
 
