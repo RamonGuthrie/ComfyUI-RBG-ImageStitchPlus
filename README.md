@@ -48,8 +48,12 @@ The node takes a primary image and an optional mask, applies a series of transfo
 - **Alpha Channel Handling:** Can correctly process RGBA images, either by filling the transparent background with a solid colour or preserving it.
 - **Final Resizing:** Allows you to specify a final target resolution, resizing the entire canvas after all padding and cropping operations are complete.
 
-https://github.com/user-attachments/assets/9131a13b-0682-419c-b53f-ad2546cbc876
+
 ---
+
+https://github.com/user-attachments/assets/a4264baf-06bf-452c-bd74-6f1dfd930853
+
+
 
 ## Installation 🛠️
 
