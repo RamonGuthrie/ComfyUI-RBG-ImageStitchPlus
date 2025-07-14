@@ -7,7 +7,7 @@ This project provides a powerful and flexible image stitching node for ComfyUI, 
 
 ---
 ![Screenshot](https://github.com/user-attachments/assets/9bc5e84f-4d33-46d5-b5c1-0fc21ef7699d)
-## Features 🚀
+## Feature List 🚀
 
 -   **Advanced Stitching Directions:** Combine up to three images with multiple layout options:
     -   **Simple:** `right`, `down`, `left`, `up`.
