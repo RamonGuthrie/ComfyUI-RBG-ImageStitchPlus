@@ -31,7 +31,7 @@ https://github.com/user-attachments/assets/52eec166-9c79-4583-9c89-d83c2dcbe986
 
 ---
 
-## Update: 10/07/2025 - RBG Pad Pro Node 🛠️
+## Update: 14/07/2025 - RBG Pad Pro Node 🛠️
 
 The `RBGPadPro` node is a powerful and versatile tool designed for advanced image padding and resizing operations. It goes far beyond simple padding by offering intelligent features like aspect ratio correction, edge-aware color filling, and feathered blending, making it an essential utility for image composition, outpainting preparation, and layout adjustments.
 
