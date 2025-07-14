@@ -37,6 +37,8 @@ The `RBGPadPro` node is a powerful and versatile tool designed for advanced imag
 
 The node takes a primary image and an optional mask, applies a series of transformations based on user-defined parameters, and outputs the modified image and its corresponding mask, ensuring they remain perfectly aligned.
 
+https://github.com/user-attachments/assets/9131a13b-0682-419c-b53f-ad2546cbc876
+
 ## Feature List 🚀
 
 - **Multi-Mode Operation:** The node can operate in three main modes:
