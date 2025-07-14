@@ -47,6 +47,7 @@ The node takes a primary image and an optional mask, applies a series of transfo
 - **Flexible Image Placement:** Provides granular control over the original image's position (center, top, left, etc.) and fine-tuning offsets on the final canvas.
 - **Alpha Channel Handling:** Can correctly process RGBA images, either by filling the transparent background with a solid colour or preserving it.
 - **Final Resizing:** Allows you to specify a final target resolution, resizing the entire canvas after all padding and cropping operations are complete.
+
 https://github.com/user-attachments/assets/9131a13b-0682-419c-b53f-ad2546cbc876
 ---
 
