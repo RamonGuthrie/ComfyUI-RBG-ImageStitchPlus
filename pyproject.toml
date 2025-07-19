@@ -1,20 +1,18 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "comfyui-rbg-imagestitchplus"
-version = "1.0.0"
+version = "1.1.0"
 description = "An advanced image stitching node for ComfyUI."
 readme = "README.md"
 requires-python = ">=3.8"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 license = { text = "MIT" }
 authors = [
   { name = "Ramon Guthrie"},
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
+    "Development Status: 4 - Beta",
+    "Intended Audience: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -33,3 +31,4 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus"
 "Bug Tracker" = "https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus/issues"
+"Linkedin" = "https://www.linkedin.com/in/ramonguthrie"
