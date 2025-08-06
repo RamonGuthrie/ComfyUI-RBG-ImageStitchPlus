@@ -1,11 +1,14 @@
 from .nodes.ImageStitchAdvance import RBGImageStitchPlus
+from .nodes.RBGPadPro import RBGPadPro
 
 NODE_CLASS_MAPPINGS = {
     "RBGImageStitchPlus": RBGImageStitchPlus,
+    "RBGPadPro": RBGPadPro
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "RBGImageStitchPlus": "RBG Image Stitch Plus 🧩"
+    "RBGImageStitchPlus": "RBG Image Stitch Plus 🧩",
+    "RBGPadPro": "RBG Pad Pro 🛠️"
 }
 
 WEB_DIRECTORY = "./web"
