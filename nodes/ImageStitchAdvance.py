@@ -12,13 +12,13 @@ class RBGImageStitchPlus:
             "required": {
                 "direction": (["right", "down", "left", "up", "H_then_V_down", "H_then_V_up", "V_then_H_right", "V_then_H_left", "Grid_2x2"], {"default": "right"}),
                 "keep_proportion": (["resize", "pad", "pad_edge", "crop"], { "default": "resize" }),
-                "pad_color": ("COLOR", {"default": "#FFFFFF", "tooltip": "Color to use for padding (R,G,B)."}),
+                "pad_color": ("STRING", {"default": "#FFFFFF", "tooltip": "Color to use for padding (R,G,B)."}),
                 "crop_position": (["center", "top", "bottom", "left", "right"], { "default": "center" }),
                 "spacing_width": ("INT", {"default": 0, "min": 0, "max": 1024, "step": 2}),
                 "spacing_color": (["white", "black", "red", "green", "blue", "custom"], {"default": "white"}),
-                "custom_spacing_color": ("COLOR", {"default": "#FFFFFF"}),
+                "custom_spacing_color": ("STRING", {"default": "#FFFFFF"}),
                 "fill_transparent_background": ("BOOLEAN", {"default": False, "tooltip": "If true, transparent areas will be filled with the specified color."}),
-                "transparent_fill_color": ("COLOR", {"default": "#000000", "tooltip": "Color to fill transparent areas (R,G,B). Only used if 'fill_transparent_background' is true."}),
+                "transparent_fill_color": ("STRING", {"default": "#000000", "tooltip": "Color to fill transparent areas (R,G,B). Only used if 'fill_transparent_background' is true."}),
                 
                 # Final Resizing Options
                 "final_resize_mode": (["none", "resize_longer_side", "resize_shorter_side"], { "default": "none" }),
