@@ -4,6 +4,7 @@ version = "2.1.0"
 description = "An advanced image stitching node for ComfyUI."
 readme = "README.md"
 requires-python = ">=3.8"
+#  Used by Comfy Registry https://comfyregistry.org
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 license = { text = "MIT" }
@@ -32,4 +33,5 @@ dependencies = [
 "Homepage" = "https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus"
 "Bug Tracker" = "https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus/issues"
 "Linkedin" = "https://www.linkedin.com/in/ramonguthrie"
+
 
