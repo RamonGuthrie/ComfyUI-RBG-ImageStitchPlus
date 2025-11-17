@@ -1,6 +1,6 @@
 [project]
 name = "comfyui-rbg-imagestitchplus"
-version = "1.1.0"
+version = "2.1.0"
 description = "An advanced image stitching node for ComfyUI."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -32,3 +32,4 @@ dependencies = [
 "Homepage" = "https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus"
 "Bug Tracker" = "https://github.com/RamonGuthrie/ComfyUI-RBG-ImageStitchPlus/issues"
 "Linkedin" = "https://www.linkedin.com/in/ramonguthrie"
+
