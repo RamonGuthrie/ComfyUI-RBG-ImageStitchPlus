@@ -11,6 +11,79 @@ import cv2
 
 MAX_RESOLUTION = 8192
 
+# --- NVIDIA RTX Video Super Resolution ---
+# Requires: pip install nvvfx  (RTX GPU + NVIDIA driver 570+ required)
+# Always present in the upscale_methods list so saved workflows remain portable.
+# Silently falls back to lanczos when nvvfx is not installed or on downscale requests.
+try:
+    import nvvfx as _nvvfx
+    _NVVFX_AVAILABLE = True
+except ImportError:
+    _nvvfx = None
+    _NVVFX_AVAILABLE = False
+
+_rtx_unavail_warned = False
+
+def _nvidia_rtx_vsr_upscale(image_cf, target_w: int, target_h: int):
+    """
+    Upscale a (B, C, H, W) float32 CUDA tensor via NVIDIA RTX Video Super Resolution.
+    Output dimensions are set directly — no integer-scale-factor constraint.
+    Returns a (B, C, H, W) float32 tensor on the original device, or None on failure.
+    """
+    global _rtx_unavail_warned
+    src_h, src_w = image_cf.shape[2], image_cf.shape[3]
+    if target_w <= src_w and target_h <= src_h:
+        return None  # RTX VSR is an upscaler only
+
+    if not _NVVFX_AVAILABLE:
+        if not _rtx_unavail_warned:
+            print(
+                "RBG: nvidia_rtx_vsr selected but 'nvvfx' is not installed.\n"
+                "  → pip install nvvfx  (RTX GPU + NVIDIA driver 570+ required)\n"
+                "  Falling back to lanczos."
+            )
+            _rtx_unavail_warned = True
+        return None
+
+    try:
+        out_w = max(8, round(target_w / 8) * 8)
+        out_h = max(8, round(target_h / 8) * 8)
+
+        with _nvvfx.VideoSuperRes(_nvvfx.effects.QualityLevel.ULTRA) as nvvfx_sr:
+            nvvfx_sr.output_width = out_w
+            nvvfx_sr.output_height = out_h
+            nvvfx_sr.load()
+
+            frames_chw = image_cf.cuda().contiguous()
+            upscaled_frames = []
+            for j in range(frames_chw.shape[0]):
+                dlpack_out = nvvfx_sr.run(frames_chw[j]).image
+                upscaled_frames.append(torch.from_dlpack(dlpack_out).clone())
+
+        result = torch.stack(upscaled_frames, dim=0)  # (B, C, H, W)
+
+        if result.shape[3] != target_w or result.shape[2] != target_h:
+            result = comfy.utils.common_upscale(result, target_w, target_h, "lanczos", "disabled")
+
+        return result.to(image_cf.device)
+
+    except Exception as e:
+        print(f"RBG: nvidia_rtx_vsr error ({e}). Falling back to lanczos.")
+        return None
+
+
+def _rtx_aware_upscale(image_cf, target_w: int, target_h: int, method: str):
+    """
+    Drop-in replacement for comfy.utils.common_upscale that adds nvidia_rtx_vsr.
+    image_cf is (B, C, H, W). Returns (B, C, H, W).
+    """
+    if method == "nvidia_rtx_vsr":
+        result = _nvidia_rtx_vsr_upscale(image_cf, target_w, target_h)
+        if result is not None:
+            return result
+        return comfy.utils.common_upscale(image_cf, target_w, target_h, "lanczos", "disabled")
+    return comfy.utils.common_upscale(image_cf, target_w, target_h, method, "disabled")
+
 class RBGPadPro:
     ASPECT_RATIOS = [
         "custom",
@@ -27,7 +100,7 @@ class RBGPadPro:
         "🎞️ 21:9 Landscape (Cinematic Widescreen)",
     ]
 
-    upscale_methods = ["lanczos", "bicubic", "nearest-exact", "bilinear", "area"]
+    upscale_methods = ["nvidia_rtx_vsr", "lanczos", "bicubic", "nearest-exact", "bilinear", "area"]
 
     @classmethod
     def INPUT_TYPES(s):
@@ -50,13 +123,16 @@ class RBGPadPro:
                 "pad_aspect_ratio": (s.ASPECT_RATIOS, {"default": "custom"}),
                 "resize_mode": (["🚫 none", "↔️ resize_longer_side", "↕️ resize_shorter_side"], { "default": "🚫 none" }),
                 "target_size": ("INT", {"default": 1024, "min": 64, "max": 8192, "step": 8}),
-                "resample_filter": (s.upscale_methods, {"default": "bicubic"}),
-                "auto_crop": ("BOOLEAN", {"default": False, "label_on": "🔳 auto_crop", "label_off": "✖️ auto_crop"}),
+                "resample_filter": (s.upscale_methods, {"default": "bicubic", "tooltip": "nvidia_rtx_vsr: NVIDIA RTX AI upscaler (pip install nvvfx, RTX GPU required, upscale only, auto-fallback) | Bicubic: Standard | Lanczos: Sharp | Area: Best for downscaling."}),
+                "auto_crop": ("BOOLEAN", {"default": False, "label_on": "🔳 Auto-Crop (Square)", "label_off": "✖️ Auto-Crop (Square)", "tooltip": "Automatically crops the image to a square based on the smaller dimension."}),
                 "invert_mask": ("BOOLEAN", {"default": True}),
                 "flip_horizontal": ("BOOLEAN", {"default": False, "label_on": "↔️ Flip Horizontal", "label_off": "🚫 Flip Horizontal"}),
                 "image_rotation": ("FLOAT", {"default": 0.0, "min": -360.0, "max": 360.0, "step": 0.01}),
                 "BorderCrop_threshold": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001, "display": "slider"}),
                 "BorderCrop_color": ("STRING", {"default": "#000000"}),
+                "pad_noise_strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001, "display": "slider", "tooltip": "Strength of noise added to the padded area. Useful for outpainting."}),
+                "noise_seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff, "tooltip": "Seed for the random noise generation."}),
+                "noise_mode": (["Color (Default)", "Greyscale", "Greyscale + Mask"], {"default": "Color (Default)"}),
                 "show_preview": ("BOOLEAN", {"default": False, "label_on": "Preview Enabled", "label_off": "Preview Disabled"}),
             },
             "optional": {
@@ -118,7 +194,7 @@ class RBGPadPro:
     def _calculate_gaussian_kernel_size(self, sigma: float) -> int:
         return max(1, 2 * int(round(3 * sigma)) + 1)
 
-    def pad_image(self, image, pad_mode, pad_left, pad_right, pad_top, pad_bottom, mask_blur_sigma, pad_color, image_position, image_offset_x, image_offset_y, image_scale, fill_transparent_background, transparent_fill_color, pad_aspect_ratio, resize_mode, target_size, resample_filter, auto_crop, invert_mask, flip_horizontal, image_rotation, BorderCrop_threshold=0.0, BorderCrop_color="#000000", show_preview=False, mask=None):
+    def pad_image(self, image, pad_mode, pad_left, pad_right, pad_top, pad_bottom, mask_blur_sigma, pad_color, pad_noise_strength, noise_seed, noise_mode, image_position, image_offset_x, image_offset_y, image_scale, fill_transparent_background, transparent_fill_color, pad_aspect_ratio, resize_mode, target_size, resample_filter, auto_crop, invert_mask, flip_horizontal, image_rotation, BorderCrop_threshold=0.0, BorderCrop_color="#000000", show_preview=False, mask=None):
         
         pad_mode = pad_mode.split(" ", 1)[-1] if " " in pad_mode else pad_mode
         resize_mode = resize_mode.split(" ", 1)[-1] if " " in resize_mode else resize_mode # Updated to handle emoji
@@ -210,6 +286,7 @@ class RBGPadPro:
 
         canvas = torch.zeros((B, final_height, final_width, C), device=image.device, dtype=image.dtype)
         mask_canvas = torch.zeros((B, final_height, final_width), device=image.device, dtype=torch.float32)
+        region_mask = torch.zeros((B, final_height, final_width), device=image.device, dtype=torch.float32)
 
         position_map = {
             'center': ((final_width - scaled_crop_W)//2, (final_height-scaled_crop_H)//2), 'left': (0, (final_height-scaled_crop_H)//2),
@@ -264,6 +341,7 @@ class RBGPadPro:
         if copy_width > 0 and copy_height > 0:
             img_slice = (slice(src_start_y, src_start_y + copy_height), slice(src_start_x, src_start_x + copy_width))
             can_slice = (slice(dst_start_y, dst_start_y + copy_height), slice(dst_start_x, dst_start_x + copy_width))
+            region_mask[:, can_slice[0], can_slice[1]] = 1.0
 
             if pad_mode == 'pad_edge_pixel':
                 canvas[:, can_slice[0], can_slice[1], :] = scaled_image[:, img_slice[0], img_slice[1], :]
@@ -296,9 +374,40 @@ class RBGPadPro:
                 ratio = target_size / max(W, H) if resize_mode == "resize_longer_side" else target_size / min(W, H)
                 target_width, target_height = (round(W * ratio) // 8) * 8, (round(H * ratio) // 8) * 8
                 if target_width > 0 and target_height > 0:
-                    mask_resample_filter = "bicubic" if resample_filter == "lanczos" else resample_filter
-                    canvas = comfy.utils.common_upscale(canvas.movedim(-1,1), target_width, target_height, resample_filter, "disabled").movedim(1,-1)
+                    # Masks are single-channel; nvidia_rtx_vsr (and lanczos) need special handling
+                    if resample_filter in ("nvidia_rtx_vsr", "lanczos"):
+                        mask_resample_filter = "bicubic"
+                    else:
+                        mask_resample_filter = resample_filter
+                    canvas = _rtx_aware_upscale(canvas.movedim(-1,1), target_width, target_height, resample_filter).movedim(1,-1)
                     mask_canvas = comfy.utils.common_upscale(mask_canvas.unsqueeze(1), target_width, target_height, mask_resample_filter, "disabled").squeeze(1)
+                    region_mask = comfy.utils.common_upscale(region_mask.unsqueeze(1), target_width, target_height, "nearest-exact", "disabled").squeeze(1)
+
+        if pad_noise_strength > 0:
+            B, H, W, C = canvas.shape
+            torch.manual_seed(noise_seed)
+
+            # Generate Noise
+            if "Greyscale" in noise_mode:
+                greyscale_noise = torch.randn((B, H, W, 1), device=canvas.device, dtype=canvas.dtype) * pad_noise_strength
+                noise_for_image = greyscale_noise.repeat(1, 1, 1, 3)
+            else:
+                noise_for_image = torch.randn((B, H, W, 3), device=canvas.device, dtype=canvas.dtype) * pad_noise_strength
+                greyscale_noise = None # Not available for color mode
+
+            # Determine Application Mask for the IMAGE
+            if noise_mode == "Greyscale + Mask":
+                padding_mask_for_image = (1.0 - (region_mask * mask_canvas)).clamp(0.0, 1.0).unsqueeze(-1)
+            else:
+                padding_mask_for_image = (1.0 - mask_canvas).unsqueeze(-1)
+                
+            # Apply noise to IMAGE
+            canvas[..., :3] = torch.clamp(canvas[..., :3] + noise_for_image * padding_mask_for_image, 0.0, 1.0)
+
+            # Apply noise to MASK if in the correct mode
+            if noise_mode == "Greyscale + Mask" and greyscale_noise is not None:
+                noise_application_mask_for_mask = padding_mask_for_image.squeeze(-1)
+                mask_canvas = torch.clamp(mask_canvas + greyscale_noise.squeeze(-1) * noise_application_mask_for_mask, 0.0, 1.0)
 
         if invert_mask: mask_canvas = 1.0 - mask_canvas
         
