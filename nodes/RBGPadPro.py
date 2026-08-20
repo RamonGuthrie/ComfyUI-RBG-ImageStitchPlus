@@ -1,5 +1,5 @@
 # License: GPL-3.0-or-later
-# RBG Krea2 Smart FaceDetailer 🎨
+# RBG Pad Pro 🖼️ 1.2
 
 
 import io
