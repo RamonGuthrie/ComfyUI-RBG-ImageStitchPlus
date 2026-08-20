@@ -65,21 +65,83 @@ def _nvidia_rtx_vsr_upscale(image_cf, target_w: int, target_h: int):
         return None
 
 
+import torch.nn.functional as F
+from torchvision.transforms import InterpolationMode
+from .rbg_resampling import advanced_resample as _advanced_resample
+def _legacy_advanced_resample(samples, target_width, target_height, method):
+    """
+    Advanced PyTorch Resampling Engine supporting Magic Kernel Sharp,
+    Mitchell-Netravali, Wavelet DWT, Anti-Aliased Filters, and standard methods.
+    Expects BCHW tensor in [0.0, 1.0].
+    """
+    _, _, h, w = samples.shape
+    if h == target_height and w == target_width:
+        return samples
+
+    if method == "magic_kernel_sharp":
+        down = comfy.utils.common_upscale(samples, target_width, target_height, "bicubic", "disabled")
+        kernel = torch.tensor([[0, -0.125, 0], [-0.125, 1.5, -0.125], [0, -0.125, 0]], dtype=samples.dtype, device=samples.device).view(1, 1, 3, 3)
+        kernel = kernel.repeat(samples.shape[1], 1, 1, 1)
+        padded_down = F.pad(down, (1, 1, 1, 1), mode='replicate')
+        sharpened = F.conv2d(padded_down, kernel, padding=0, groups=samples.shape[1])
+        return torch.clamp(sharpened, 0.0, 1.0)
+
+    elif method == "mitchell_netravali":
+        bicubic_aa = comfy.utils.common_upscale(samples, target_width, target_height, "bicubic", "disabled")
+        area_aa = comfy.utils.common_upscale(samples, target_width, target_height, "area", "disabled")
+        return torch.clamp(0.66 * bicubic_aa + 0.34 * area_aa, 0.0, 1.0)
+
+    elif method == "anti_aliased_bicubic":
+        if HAS_TVF:
+            out = TVF.resize(samples, [target_height, target_width], interpolation=InterpolationMode.BICUBIC, antialias=True)
+        else:
+            out = comfy.utils.common_upscale(samples, target_width, target_height, "bicubic", "disabled")
+        return torch.clamp(out, 0.0, 1.0)
+
+    elif method == "anti_aliased_lanczos":
+        out = comfy.utils.common_upscale(samples, target_width, target_height, "lanczos", "disabled")
+        return torch.clamp(out, 0.0, 1.0)
+
+    elif method == "dwt_haar":
+        scaled = samples
+        while scaled.shape[2] >= target_height * 2 and scaled.shape[3] >= target_width * 2:
+            scaled = F.avg_pool2d(scaled, kernel_size=2, stride=2)
+        out = comfy.utils.common_upscale(scaled, target_width, target_height, "bicubic", "disabled")
+        return torch.clamp(out, 0.0, 1.0)
+
+    else:
+        out = comfy.utils.common_upscale(samples, target_width, target_height, method, "disabled")
+        return torch.clamp(out, 0.0, 1.0)
+
+
 def _rtx_aware_upscale(image_cf, target_w: int, target_h: int, method: str):
     """
-    Drop-in replacement for comfy.utils.common_upscale that adds nvidia_rtx_vsr.
+    Drop-in replacement for comfy.utils.common_upscale that adds nvidia_rtx_vsr and advanced resample methods.
     image_cf is (B, C, H, W). Returns (B, C, H, W).
     """
     if method == "nvidia_rtx_vsr":
         result = _nvidia_rtx_vsr_upscale(image_cf, target_w, target_h)
         if result is not None:
-            return result
-        return comfy.utils.common_upscale(image_cf, target_w, target_h, "lanczos", "disabled")
-    return comfy.utils.common_upscale(image_cf, target_w, target_h, method, "disabled")
+            return torch.clamp(result, 0.0, 1.0)
+        res = comfy.utils.common_upscale(image_cf, target_w, target_h, "lanczos", "disabled")
+        return torch.clamp(res, 0.0, 1.0)
+    return _advanced_resample(image_cf, target_w, target_h, method)
 
 
 class RBGImageStitchPlus:
-    upscale_methods = ["nvidia_rtx_vsr", "lanczos", "bicubic", "nearest-exact", "bilinear", "area"]
+    upscale_methods = [
+        "nvidia_rtx_vsr",
+        "lanczos",
+        "bicubic",
+        "nearest-exact",
+        "bilinear",
+        "area",
+        "magic_kernel_sharp",
+        "mitchell_netravali",
+        "anti_aliased_bicubic",
+        "anti_aliased_lanczos",
+        "dwt_haar",
+    ]
 
     @classmethod
     def INPUT_TYPES(s):
@@ -98,11 +160,11 @@ class RBGImageStitchPlus:
                 # Final Resizing Options
                 "final_resize_mode": (["🚫 none", "↔️ resize_longer_side", "↕️ resize_shorter_side"], { "default": "🚫 none" }),
                 "final_target_size": ("INT", {"default": 1024, "min": 64, "max": 8192, "step": 8}),
-                "resample_filter": (s.upscale_methods, {"default": "bicubic", "tooltip": "nvidia_rtx_vsr: NVIDIA RTX AI upscaler (pip install nvvfx, RTX GPU required, upscale only, auto-fallback) | Interpolation for general resizing and the upscaling part of supersampling."}),
+                "resample_filter": (s.upscale_methods, {"default": "magic_kernel_sharp", "tooltip": "magic_kernel_sharp: Magic Kernel 3 + Sharp-2013 | mitchell_netravali: B=C=1/3 spline | anti_aliased_bicubic: PyTorch AA | dwt_haar: Haar LL low-pass downscaling | nvidia_rtx_vsr: RTX AI upscaler"}),
                 
                 # Supersampling for anti-aliasing
                 "supersample_factor": ("FLOAT", {"default": 1.0, "min": 1.0, "max": 4.0, "step": 0.1, "tooltip": "Upscales then downscales the final image for anti-aliasing. Factor > 1 enables it."}),
-                "final_downsample_interpolation": (s.upscale_methods, {"default": "area", "tooltip": "Interpolation for the downsampling part of supersampling. 'area' is often best for this."}),
+                "final_downsample_interpolation": (s.upscale_methods, {"default": "magic_kernel_sharp", "tooltip": "Interpolation for downsampling part of supersampling."}),
 
                 # Clarity (Midtone Contrast)
                 "clarity_strength": ("FLOAT", {"default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01, "tooltip": "Adjusts midtone contrast. Negative values for a dreamlike look, positive for punchy. -100=soft, +100=punchy."}),
